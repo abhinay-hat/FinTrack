@@ -10,10 +10,12 @@ import Category from '@/models/Category';
 import { Q } from '@nozbe/watermelondb';
 import { formatCurrency } from '@/utils';
 import { colors } from '@/theme';
+import { useTransactionSheet } from '@/screens/AddTransactionScreen';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
+  const transactionSheet = useTransactionSheet();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [categoryMap, setCategoryMap] = useState<Record<string, { name: string; icon: string; color: string }>>({});
@@ -93,7 +95,7 @@ export default function HomeScreen() {
       {/* Quick actions */}
       <View className="flex-row mx-4 mt-4 gap-3">
         <Pressable
-          onPress={() => navigation.navigate('AddTransaction')}
+          onPress={() => transactionSheet.open()}
           className="flex-1 items-center py-4"
           style={{ backgroundColor: '#FFFFFF', borderRadius: 14 }}
         >
@@ -103,7 +105,7 @@ export default function HomeScreen() {
           </Text>
         </Pressable>
         <Pressable
-          onPress={() => navigation.navigate('AddTransaction')}
+          onPress={() => transactionSheet.open()}
           className="flex-1 items-center py-4"
           style={{ backgroundColor: '#FFFFFF', borderRadius: 14 }}
         >
@@ -142,7 +144,7 @@ export default function HomeScreen() {
             <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.textSecondary.DEFAULT }}>
               No transactions yet
             </Text>
-            <Pressable onPress={() => navigation.navigate('AddTransaction')} className="mt-3">
+            <Pressable onPress={() => transactionSheet.open()} className="mt-3">
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, color: colors.blueAccent.DEFAULT }}>
                 Add your first transaction
               </Text>

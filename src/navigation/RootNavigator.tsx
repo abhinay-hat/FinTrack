@@ -1,6 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import BottomTabNavigator from './BottomTabNavigator';
-import AddTransactionScreen from '@/screens/AddTransactionScreen';
+import AddTransactionScreen, { TransactionSheetProvider } from '@/screens/AddTransactionScreen';
 import AccountsScreen from '@/screens/AccountsScreen';
 import AddAccountScreen from '@/screens/AddAccountScreen';
 import StatementImportScreen from '@/screens/StatementImportScreen';
@@ -21,21 +21,23 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
-      <Stack.Screen
-        name="AddTransaction"
-        component={AddTransactionScreen}
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-        }}
-      />
-      <Stack.Screen name="Accounts" component={AccountsScreen} />
-      <Stack.Screen name="AddAccount" component={AddAccountScreen} />
-      <Stack.Screen name="StatementImport" component={StatementImportScreen} />
-      <Stack.Screen name="ImportPreview" component={ImportPreviewScreen} />
-      <Stack.Screen name="PDFImport" component={PDFImportScreen} />
-    </Stack.Navigator>
+    <TransactionSheetProvider>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+        <Stack.Screen
+          name="AddTransaction"
+          component={AddTransactionScreen}
+          options={{
+            presentation: 'transparentModal',
+            animation: 'fade',
+          }}
+        />
+        <Stack.Screen name="Accounts" component={AccountsScreen} />
+        <Stack.Screen name="AddAccount" component={AddAccountScreen} />
+        <Stack.Screen name="StatementImport" component={StatementImportScreen} />
+        <Stack.Screen name="ImportPreview" component={ImportPreviewScreen} />
+        <Stack.Screen name="PDFImport" component={PDFImportScreen} />
+      </Stack.Navigator>
+    </TransactionSheetProvider>
   );
 }
