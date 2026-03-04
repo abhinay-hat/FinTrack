@@ -3,7 +3,7 @@ import './global.css';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import DatabaseProvider from '@nozbe/watermelondb/DatabaseProvider';
+import { DatabaseProvider } from '@/db/DatabaseContext';
 import {
   useFonts,
   Inter_400Regular,
