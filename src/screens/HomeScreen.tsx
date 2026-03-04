@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bank, ArrowUp, ArrowDown, CaretRight, FileArrowUp } from 'phosphor-react-native';
 import { database } from '@/db';
 import Account from '@/models/Account';
@@ -12,6 +13,7 @@ import { colors } from '@/theme';
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [categoryMap, setCategoryMap] = useState<Record<string, { name: string; icon: string; color: string }>>({});
@@ -49,7 +51,7 @@ export default function HomeScreen() {
   const totalBalance = accounts.reduce((sum, acc) => sum + acc.balance, 0);
 
   return (
-    <ScrollView className="flex-1 bg-background">
+    <ScrollView className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Balance card */}
       <View
         className="mx-4 mt-4 p-5"

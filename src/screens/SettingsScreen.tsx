@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bank, CaretRight, Info, FileArrowUp } from 'phosphor-react-native';
 import { colors } from '@/theme';
 
@@ -29,11 +30,12 @@ function SettingsRow({ icon, label, onPress }: SettingsRowProps) {
 
 export default function SettingsScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
 
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
-      <View className="px-4 pt-2 pb-3 bg-white">
+      <View className="px-4 pb-3 bg-white" style={{ paddingTop: insets.top + 8 }}>
         <Text
           style={{
             fontFamily: 'PlusJakartaSans_600SemiBold',

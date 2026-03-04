@@ -1,6 +1,7 @@
 import { View, Text, FlatList, Pressable, Alert } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Plus, Bank, CreditCard, Money, Wallet, Vault, DotsThreeVertical } from 'phosphor-react-native';
 import Toast from 'react-native-toast-message';
 import { database } from '@/db';
@@ -27,6 +28,7 @@ const TYPE_ICONS: Record<AccountType, any> = {
 
 export default function AccountsScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   useEffect(() => {
@@ -158,7 +160,7 @@ export default function AccountsScreen() {
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
-      <View className="flex-row items-center px-4 pt-2 pb-3 bg-white">
+      <View className="flex-row items-center px-4 pb-3 bg-white" style={{ paddingTop: insets.top + 8 }}>
         <Pressable onPress={() => navigation.goBack()} className="p-2 -ml-2" hitSlop={8}>
           <ArrowLeft size={24} color={colors.textPrimary.DEFAULT} />
         </Pressable>

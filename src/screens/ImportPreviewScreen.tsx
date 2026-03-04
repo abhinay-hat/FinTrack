@@ -1,6 +1,7 @@
 import { View, Text, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, ArrowDown, ArrowUp, CheckCircle } from 'phosphor-react-native';
 import Toast from 'react-native-toast-message';
 import { database } from '@/db';
@@ -19,6 +20,7 @@ type RouteParams = {
 export default function ImportPreviewScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<RouteProp<RouteParams, 'ImportPreview'>>();
+  const insets = useSafeAreaInsets();
   const markFirstStatementImported = useOnboardingStore((s) => s.markFirstStatementImported);
 
   const [transactions, setTransactions] = useState<ParsedTransaction[]>([]);
@@ -160,7 +162,7 @@ export default function ImportPreviewScreen() {
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
-      <View className="flex-row items-center px-4 pt-2 pb-3 bg-white">
+      <View className="flex-row items-center px-4 pb-3 bg-white" style={{ paddingTop: insets.top + 8 }}>
         <Pressable onPress={() => navigation.goBack()} className="p-2 -ml-2" hitSlop={8}>
           <ArrowLeft size={24} color={colors.textPrimary.DEFAULT} />
         </Pressable>

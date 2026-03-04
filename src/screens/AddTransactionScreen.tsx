@@ -1,6 +1,7 @@
 import { View, Text, Pressable, ScrollView, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, CalendarBlank, NotePencil } from 'phosphor-react-native';
 import Toast from 'react-native-toast-message';
 import { database } from '@/db';
@@ -26,6 +27,7 @@ export default function AddTransactionScreen() {
   const route = useRoute<RouteProp<RouteParams, 'AddTransaction'>>();
   const transactionId = route.params?.transactionId;
   const isEditing = !!transactionId;
+  const insets = useSafeAreaInsets();
 
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState<TransactionType>('expense');
@@ -157,7 +159,7 @@ export default function AddTransactionScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header */}
-      <View className="flex-row items-center px-4 pt-2 pb-3 bg-white">
+      <View className="flex-row items-center px-4 pb-3 bg-white" style={{ paddingTop: insets.top + 8 }}>
         <Pressable onPress={() => navigation.goBack()} className="p-2 -ml-2" hitSlop={8}>
           <ArrowLeft size={24} color={colors.textPrimary.DEFAULT} />
         </Pressable>
