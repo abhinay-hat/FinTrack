@@ -11,6 +11,7 @@ import { createTransaction, updateTransaction } from '@/services/transactionServ
 import AmountInput from '@/components/AmountInput';
 import TypeToggle from '@/components/TypeToggle';
 import CategoryPicker, { CategoryItem } from '@/components/CategoryPicker';
+import AccountSelector, { AccountItem } from '@/components/AccountSelector';
 import { colors } from '@/theme';
 import { formatDate } from '@/utils';
 
@@ -34,7 +35,8 @@ export default function AddTransactionScreen() {
   const [date, setDate] = useState(new Date());
   const [showNotes, setShowNotes] = useState(false);
   const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [defaultAccountId, setDefaultAccountId] = useState<string | null>(null);
+  const [accounts, setAccounts] = useState<AccountItem[]>([]);
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Load categories
@@ -53,28 +55,24 @@ export default function AddTransactionScreen() {
     return () => sub.unsubscribe();
   }, []);
 
-  // Get or create default account
+  // Load accounts reactively
   useEffect(() => {
-    async function ensureAccount() {
-      const accounts = await database.get<Account>('accounts').query().fetch();
-      if (accounts.length > 0) {
-        setDefaultAccountId(accounts[0].id);
-      } else {
-        // Create a default Cash account
-        await database.write(async () => {
-          const account = await database.get<Account>('accounts').create((r) => {
-            r.name = 'Cash';
-            r.accountType = 'cash';
-            r.balance = 0;
-            r.currency = 'INR';
-            r.isDefault = true;
-          });
-          setDefaultAccountId(account.id);
-        });
-      }
-    }
-    ensureAccount();
-  }, []);
+    const sub = database
+      .get<Account>('accounts')
+      .query()
+      .observe()
+      .subscribe((accs) => {
+        setAccounts(
+          accs.map((a) => ({ id: a.id, name: a.name, accountType: a.accountType, balance: a.balance })),
+        );
+        // Auto-select default account if none selected
+        if (!selectedAccountId || !accs.find((a) => a.id === selectedAccountId)) {
+          const def = accs.find((a) => a.isDefault) ?? accs[0];
+          if (def) setSelectedAccountId(def.id);
+        }
+      });
+    return () => sub.unsubscribe();
+  }, [selectedAccountId]);
 
   // Load existing transaction for editing
   useEffect(() => {
@@ -107,7 +105,7 @@ export default function AddTransactionScreen() {
       Toast.show({ type: 'error', text1: 'Select a category' });
       return;
     }
-    if (!defaultAccountId) {
+    if (!selectedAccountId) {
       Toast.show({ type: 'error', text1: 'No account available' });
       return;
     }
@@ -133,7 +131,7 @@ export default function AddTransactionScreen() {
           description: desc,
           transactionType,
           categoryId: selectedCategoryId,
-          accountId: defaultAccountId,
+          accountId: selectedAccountId,
           notes: notes.trim() || undefined,
         });
         Toast.show({ type: 'success', text1: 'Transaction added' });
@@ -145,7 +143,7 @@ export default function AddTransactionScreen() {
     } finally {
       setSaving(false);
     }
-  }, [amount, selectedCategoryId, defaultAccountId, description, notes, transactionType, date, isEditing, transactionId, categories, navigation]);
+  }, [amount, selectedCategoryId, selectedAccountId, description, notes, transactionType, date, isEditing, transactionId, categories, navigation]);
 
   const handleDateChip = useCallback((offset: number) => {
     const d = new Date();
@@ -194,6 +192,22 @@ export default function AddTransactionScreen() {
             onSelect={setSelectedCategoryId}
           />
         </View>
+
+        {/* Account selector */}
+        {accounts.length > 1 && (
+          <View className="mb-4">
+            <Text
+              style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: '#6B7280', marginBottom: 8, marginLeft: 16 }}
+            >
+              ACCOUNT
+            </Text>
+            <AccountSelector
+              accounts={accounts}
+              selectedId={selectedAccountId}
+              onSelect={setSelectedAccountId}
+            />
+          </View>
+        )}
 
         {/* Description */}
         <View className="px-4 mb-4">
