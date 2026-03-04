@@ -5,6 +5,7 @@ import AccountsScreen from '@/screens/AccountsScreen';
 import AddAccountScreen from '@/screens/AddAccountScreen';
 import StatementImportScreen from '@/screens/StatementImportScreen';
 import ImportPreviewScreen from '@/screens/ImportPreviewScreen';
+import PDFImportScreen from '@/screens/PDFImportScreen';
 
 export type RootStackParamList = {
   MainTabs: undefined;
@@ -13,6 +14,7 @@ export type RootStackParamList = {
   AddAccount: { accountId?: string } | undefined;
   StatementImport: undefined;
   ImportPreview: { transactions: string };
+  PDFImport: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -33,6 +35,7 @@ export default function RootNavigator() {
       <Stack.Screen name="AddAccount" component={AddAccountScreen} />
       <Stack.Screen name="StatementImport" component={StatementImportScreen} />
       <Stack.Screen name="ImportPreview" component={ImportPreviewScreen} />
+      <Stack.Screen name="PDFImport" component={PDFImportScreen} />
     </Stack.Navigator>
   );
 }
