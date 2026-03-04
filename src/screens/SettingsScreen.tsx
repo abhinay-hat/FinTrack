@@ -12,6 +12,7 @@ import {
   NumberSquareOne,
   Timer,
   Globe,
+  CloudArrowUp,
 } from 'phosphor-react-native';
 import { useTranslation } from 'react-i18next';
 import { colors } from '@/theme';
@@ -153,6 +154,16 @@ export default function SettingsScreen() {
             icon={<FileArrowUp size={22} color={colors.teal.DEFAULT} weight="duotone" />}
             label={t('settings.import')}
             onPress={() => navigation.navigate('StatementImport')}
+          />
+        </View>
+
+        {/* Backup & Restore */}
+        <SectionLabel text="BACKUP" />
+        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 14, marginHorizontal: 16 }}>
+          <SettingsRow
+            icon={<CloudArrowUp size={22} color={colors.teal.DEFAULT} weight="duotone" />}
+            label="Backup & Restore"
+            onPress={() => navigation.navigate('BackupSettings')}
           />
         </View>
 
