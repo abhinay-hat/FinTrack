@@ -7,3 +7,5 @@ export type { ModelStatus, AIModel } from './useAIStore';
 export { useOnboardingStore } from './useOnboardingStore';
 
 export { useSecurityStore } from './useSecurityStore';
+
+export { useBackupStore } from './useBackupStore';

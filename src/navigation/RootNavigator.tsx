@@ -11,6 +11,8 @@ import PDFImportScreen from '@/screens/PDFImportScreen';
 import OnboardingScreen from '@/screens/OnboardingScreen';
 import LockScreen from '@/screens/LockScreen';
 import PINSetupScreen from '@/screens/PINSetupScreen';
+import BackupSettingsScreen from '@/screens/BackupSettingsScreen';
+import RestoreBackupScreen from '@/screens/RestoreBackupScreen';
 
 export type RootStackParamList = {
   Onboarding: undefined;
@@ -23,6 +25,8 @@ export type RootStackParamList = {
   PDFImport: undefined;
   LockScreen: undefined;
   PINSetup: undefined;
+  BackupSettings: undefined;
+  RestoreBackup: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -58,6 +62,8 @@ export default function RootNavigator() {
         <Stack.Screen name="ImportPreview" component={ImportPreviewScreen} />
         <Stack.Screen name="PDFImport" component={PDFImportScreen} />
         <Stack.Screen name="PINSetup" component={PINSetupScreen} />
+        <Stack.Screen name="BackupSettings" component={BackupSettingsScreen} />
+        <Stack.Screen name="RestoreBackup" component={RestoreBackupScreen} />
       </Stack.Navigator>
     </TransactionSheetProvider>
   );
