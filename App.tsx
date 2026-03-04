@@ -1,9 +1,12 @@
 import './global.css';
 
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DatabaseProvider } from '@/db/DatabaseContext';
+import { useAppStore } from '@/stores';
+import { detectDeviceTier } from '@/utils/deviceTier';
 import {
   useFonts,
   Inter_400Regular,
@@ -25,6 +28,11 @@ import Toast from 'react-native-toast-message';
 
 function AppContent() {
   const { database, isReady } = useDatabase();
+  const setDeviceTier = useAppStore((s) => s.setDeviceTier);
+
+  useEffect(() => {
+    detectDeviceTier().then(setDeviceTier);
+  }, [setDeviceTier]);
 
   if (!isReady) {
     return (
