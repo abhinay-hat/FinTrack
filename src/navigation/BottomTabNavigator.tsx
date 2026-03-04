@@ -4,14 +4,14 @@ import { colors } from '@/theme';
 
 import HomeScreen from '@/screens/HomeScreen';
 import TransactionsScreen from '@/screens/TransactionsScreen';
-import ImportScreen from '@/screens/ImportScreen';
+import AnalyticsScreen from '@/screens/AnalyticsScreen';
 import BudgetScreen from '@/screens/BudgetScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 
 export type TabParamList = {
   Home: undefined;
   Transactions: undefined;
-  Import: undefined;
+  Analytics: undefined;
   Budget: undefined;
   Settings: undefined;
 };
@@ -69,9 +69,10 @@ export default function BottomTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Import"
-        component={ImportScreen}
+        name="Analytics"
+        component={AnalyticsScreen}
         options={{
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
             <ChartPie size={size} color={color} weight={focused ? 'fill' : 'regular'} />
           ),
