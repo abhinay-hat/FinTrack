@@ -22,6 +22,7 @@ import {
 } from '@expo-google-fonts/plus-jakarta-sans';
 import { DMMono_400Regular, DMMono_500Medium } from '@expo-google-fonts/dm-mono';
 import { ActivityIndicator, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import RootNavigator from '@/navigation/RootNavigator';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -44,15 +45,17 @@ function AppContent() {
   }
 
   return (
-    <DatabaseProvider database={database}>
-      <SafeAreaProvider>
-        <NavigationContainer>
-          <RootNavigator />
-          <StatusBar style="auto" />
-        </NavigationContainer>
-        <Toast />
-      </SafeAreaProvider>
-    </DatabaseProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <DatabaseProvider database={database}>
+        <SafeAreaProvider>
+          <NavigationContainer>
+            <RootNavigator />
+            <StatusBar style="auto" />
+          </NavigationContainer>
+          <Toast />
+        </SafeAreaProvider>
+      </DatabaseProvider>
+    </GestureHandlerRootView>
   );
 }
 

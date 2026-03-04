@@ -197,11 +197,7 @@ export default function BudgetScreen() {
       </View>
 
       {/* Month Selector */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16, gap: 8, paddingBottom: 8 }}
-      >
+      <View style={{ flexDirection: 'row', paddingHorizontal: 16, gap: 8, paddingBottom: 8 }}>
         {monthOptions.map((opt) => {
           const isSelected = opt.value === selectedMonth;
           return (
@@ -227,7 +223,7 @@ export default function BudgetScreen() {
             </Pressable>
           );
         })}
-      </ScrollView>
+      </View>
 
       {budgets.length === 0 ? (
         <EmptyState

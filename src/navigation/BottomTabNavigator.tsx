@@ -82,6 +82,7 @@ export default function BottomTabNavigator() {
         name="Budget"
         component={BudgetScreen}
         options={{
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
             <Target size={size} color={color} weight={focused ? 'fill' : 'regular'} />
           ),

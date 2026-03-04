@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, Switch } from 'react-native';
+import { View, Text, Pressable, ScrollView, Switch, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
@@ -289,7 +289,12 @@ export default function SettingsScreen() {
           <SettingsRow
             icon={<Info size={22} color={colors.textSecondary.DEFAULT} weight="duotone" />}
             label={t('settings.about')}
-            onPress={() => {}}
+            onPress={() =>
+              Alert.alert(
+                'FinTrack',
+                'Version 1.0.0\n\nAI-powered personal finance tracker.\n100% offline — your data never leaves your phone.\n\nBuilt for India with UPI support, multi-account tracking, budgets, analytics, and encrypted backups.',
+              )
+            }
           />
         </View>
 
