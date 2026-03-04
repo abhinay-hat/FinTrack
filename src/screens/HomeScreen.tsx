@@ -1,7 +1,7 @@
-import { View, Text, Pressable, ScrollView, FlatList } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import { View, Text, Pressable, ScrollView } from 'react-native';
+import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Bank, ArrowUp, ArrowDown, ArrowsLeftRight, CaretRight, FileArrowUp } from 'phosphor-react-native';
+import { Bank, ArrowUp, ArrowDown, CaretRight, FileArrowUp } from 'phosphor-react-native';
 import { database } from '@/db';
 import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
@@ -25,9 +25,9 @@ export default function HomeScreen() {
 
     const txnSub = database
       .get<Transaction>('transactions')
-      .query(Q.sortBy('date', Q.desc), Q.take(5))
+      .query(Q.sortBy('date', Q.desc))
       .observe()
-      .subscribe(setRecentTransactions);
+      .subscribe((txns) => setRecentTransactions(txns.slice(0, 5)));
 
     const catSub = database
       .get<Category>('categories')
