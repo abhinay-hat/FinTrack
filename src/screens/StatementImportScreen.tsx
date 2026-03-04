@@ -2,7 +2,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { useCallback, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ArrowLeft, FileArrowUp, FileCsv, FileXls } from 'phosphor-react-native';
+import { ArrowLeft, FileArrowUp, FileCsv, FileXls, FilePdf } from 'phosphor-react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import Toast from 'react-native-toast-message';
 import {
@@ -219,6 +219,29 @@ export default function StatementImportScreen() {
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 11, color: '#6B7280', marginTop: 4 }}>Excel</Text>
             </View>
           </View>
+
+          {/* PDF import option */}
+          <Pressable
+            onPress={() => navigation.navigate('PDFImport')}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 14,
+              padding: 16,
+              marginTop: 24,
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}
+          >
+            <FilePdf size={28} color="#D32F2F" weight="duotone" />
+            <View className="flex-1 ml-3">
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 15, color: colors.textPrimary.DEFAULT }}>
+                Import from PDF
+              </Text>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.textSecondary.DEFAULT, marginTop: 2 }}>
+                Extract transactions from PDF statements
+              </Text>
+            </View>
+          </Pressable>
         </ScrollView>
       )}
 
