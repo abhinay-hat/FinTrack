@@ -204,16 +204,15 @@ export default function BackupSettingsScreen() {
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Create Backup */}
         <Text style={sectionLabelStyle}>CREATE BACKUP</Text>
-        <Pressable
-          onPress={() => setStep('password')}
-          style={({ pressed }) => [cardStyle, { opacity: pressed ? 0.7 : 1 }]}
-        >
-          <Shield size={28} color={colors.blueAccent.DEFAULT} weight="duotone" />
-          <View style={{ flex: 1, marginLeft: 14 }}>
-            <Text style={cardTitleStyle}>Create Backup</Text>
-            <Text style={cardSubtitleStyle}>
-              Encrypt and export your data as a .fintrack file
-            </Text>
+        <Pressable onPress={() => setStep('password')}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 14, marginHorizontal: 16, padding: 16, flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#E3F2FD', alignItems: 'center', justifyContent: 'center' }}>
+              <Shield size={24} color={colors.blueAccent.DEFAULT} weight="fill" />
+            </View>
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text style={cardTitleStyle}>Create Backup</Text>
+              <Text style={cardSubtitleStyle}>Encrypt and export your data as a .fintrack file</Text>
+            </View>
           </View>
         </Pressable>
 
@@ -225,25 +224,24 @@ export default function BackupSettingsScreen() {
 
         {/* Restore Backup */}
         <Text style={sectionLabelStyle}>RESTORE BACKUP</Text>
-        <Pressable
-          onPress={handlePickFile}
-          style={({ pressed }) => [cardStyle, { opacity: pressed ? 0.7 : 1 }]}
-        >
-          <ArrowCounterClockwise size={28} color={colors.teal.DEFAULT} weight="duotone" />
-          <View style={{ flex: 1, marginLeft: 14 }}>
-            <Text style={cardTitleStyle}>Restore from Backup</Text>
-            <Text style={cardSubtitleStyle}>
-              Select a .fintrack file to restore your data
-            </Text>
+        <Pressable onPress={handlePickFile}>
+          <View style={{ backgroundColor: '#FFFFFF', borderRadius: 14, marginHorizontal: 16, padding: 16, flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ width: 44, height: 44, borderRadius: 12, backgroundColor: '#E0F2F1', alignItems: 'center', justifyContent: 'center' }}>
+              <ArrowCounterClockwise size={24} color={colors.teal.DEFAULT} weight="fill" />
+            </View>
+            <View style={{ flex: 1, marginLeft: 14 }}>
+              <Text style={cardTitleStyle}>Restore from Backup</Text>
+              <Text style={cardSubtitleStyle}>Select a .fintrack file to restore your data</Text>
+            </View>
           </View>
         </Pressable>
 
         {/* Cloud Info */}
         <Text style={sectionLabelStyle}>ABOUT BACKUPS</Text>
-        <View style={[cardStyle, { flexDirection: 'column', alignItems: 'flex-start' }]}>
+        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 14, marginHorizontal: 16, padding: 16 }}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             <CloudArrowUp size={22} color={colors.blueAccent.DEFAULT} weight="duotone" />
-            <Text style={[cardTitleStyle, { marginLeft: 10 }]}>Your backup, your storage</Text>
+            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: colors.textPrimary.DEFAULT, marginLeft: 10 }}>Your backup, your storage</Text>
           </View>
           <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.textSecondary.DEFAULT, lineHeight: 20 }}>
             FinTrack doesn't have its own cloud. Your backup is a file you can save
@@ -261,7 +259,7 @@ export default function BackupSettingsScreen() {
 
         {/* Auto-backup toggle */}
         <Text style={sectionLabelStyle}>AUTO-BACKUP</Text>
-        <View style={[cardStyle, { justifyContent: 'space-between' }]}>
+        <View style={{ backgroundColor: '#FFFFFF', borderRadius: 14, marginHorizontal: 16, padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={cardTitleStyle}>Auto-backup reminder</Text>
             <Text style={cardSubtitleStyle}>Get reminded to backup periodically</Text>

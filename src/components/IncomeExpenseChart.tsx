@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native';
-import Svg, { Rect, Text as SvgText, Line as SvgLine } from 'react-native-svg';
+import Svg, { Rect, Text as SvgText, Line as SvgLine, G } from 'react-native-svg';
 import { colors } from '@/theme';
 import { formatCurrency } from '@/utils';
 
@@ -15,11 +15,13 @@ interface IncomeExpenseChartProps {
 }
 
 export default function IncomeExpenseChart({ data, height = 200 }: IncomeExpenseChartProps) {
-  if (data.length === 0) {
+  const hasData = data.some((d) => d.income > 0 || d.expense > 0);
+
+  if (data.length === 0 || !hasData) {
     return (
-      <View style={{ height, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ height: 120, alignItems: 'center', justifyContent: 'center' }}>
         <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.textSecondary.DEFAULT }}>
-          No data available
+          No income or expense data yet
         </Text>
       </View>
     );
@@ -33,7 +35,7 @@ export default function IncomeExpenseChart({ data, height = 200 }: IncomeExpense
   const chartW = CHART_WIDTH - PADDING_LEFT - PADDING_RIGHT;
   const chartH = height - PADDING_TOP - PADDING_BOTTOM;
 
-  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expense]), 1);
+  const maxVal = Math.max(...data.flatMap((d) => [d.income, d.expense]));
 
   const groupWidth = chartW / data.length;
   const barWidth = Math.min(groupWidth * 0.3, 20);
@@ -71,7 +73,6 @@ export default function IncomeExpenseChart({ data, height = 200 }: IncomeExpense
             textAnchor="end"
             fill={colors.textSecondary.DEFAULT}
             fontSize={10}
-            fontFamily="Inter_400Regular"
           >
             {formatCurrency(tick.value, true)}
           </SvgText>
@@ -81,29 +82,33 @@ export default function IncomeExpenseChart({ data, height = 200 }: IncomeExpense
         {data.map((item, i) => {
           const groupCenter = PADDING_LEFT + groupWidth * i + groupWidth / 2;
 
-          const incomeH = (item.income / maxVal) * chartH;
-          const expenseH = (item.expense / maxVal) * chartH;
+          const incomeH = maxVal > 0 ? (item.income / maxVal) * chartH : 0;
+          const expenseH = maxVal > 0 ? (item.expense / maxVal) * chartH : 0;
 
           return (
-            <View key={i}>
+            <G key={i}>
               {/* Income bar */}
-              <Rect
-                x={groupCenter - barWidth - gap / 2}
-                y={PADDING_TOP + chartH - incomeH}
-                width={barWidth}
-                height={Math.max(incomeH, 1)}
-                rx={4}
-                fill={colors.teal.DEFAULT}
-              />
+              {incomeH > 0 && (
+                <Rect
+                  x={groupCenter - barWidth - gap / 2}
+                  y={PADDING_TOP + chartH - incomeH}
+                  width={barWidth}
+                  height={incomeH}
+                  rx={4}
+                  fill={colors.teal.DEFAULT}
+                />
+              )}
               {/* Expense bar */}
-              <Rect
-                x={groupCenter + gap / 2}
-                y={PADDING_TOP + chartH - expenseH}
-                width={barWidth}
-                height={Math.max(expenseH, 1)}
-                rx={4}
-                fill={colors.danger.DEFAULT}
-              />
+              {expenseH > 0 && (
+                <Rect
+                  x={groupCenter + gap / 2}
+                  y={PADDING_TOP + chartH - expenseH}
+                  width={barWidth}
+                  height={expenseH}
+                  rx={4}
+                  fill={colors.danger.DEFAULT}
+                />
+              )}
               {/* X label */}
               <SvgText
                 x={groupCenter}
@@ -111,11 +116,10 @@ export default function IncomeExpenseChart({ data, height = 200 }: IncomeExpense
                 textAnchor="middle"
                 fill={colors.textSecondary.DEFAULT}
                 fontSize={10}
-                fontFamily="Inter_400Regular"
               >
                 {item.label}
               </SvgText>
-            </View>
+            </G>
           );
         })}
       </Svg>

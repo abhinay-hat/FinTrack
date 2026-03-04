@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "FinTrack",
-    "slug": "fintrack",
+    "slug": "fintrack-abhinay",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,6 +27,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "aecbaaf7-0850-411e-b19a-1b945ec551c8"
+      }
+    },
+    "owner": "abhinay123"
   }
 }
