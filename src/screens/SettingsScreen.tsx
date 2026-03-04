@@ -1,6 +1,6 @@
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { Bank, CaretRight, Info, Trash } from 'phosphor-react-native';
+import { Bank, CaretRight, Info, FileArrowUp } from 'phosphor-react-native';
 import { colors } from '@/theme';
 
 interface SettingsRowProps {
@@ -65,6 +65,12 @@ export default function SettingsScreen() {
             icon={<Bank size={22} color={colors.blueAccent.DEFAULT} weight="duotone" />}
             label="Manage Accounts"
             onPress={() => navigation.navigate('Accounts')}
+          />
+          <View style={{ height: 1, backgroundColor: '#F1F5F9', marginLeft: 46 }} />
+          <SettingsRow
+            icon={<FileArrowUp size={22} color={colors.teal.DEFAULT} weight="duotone" />}
+            label="Import Statement"
+            onPress={() => navigation.navigate('StatementImport')}
           />
         </View>
 

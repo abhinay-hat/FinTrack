@@ -1,7 +1,7 @@
 import { View, Text, Pressable, ScrollView, FlatList } from 'react-native';
 import { useEffect, useState, useCallback } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { Bank, ArrowUp, ArrowDown, ArrowsLeftRight, CaretRight } from 'phosphor-react-native';
+import { Bank, ArrowUp, ArrowDown, ArrowsLeftRight, CaretRight, FileArrowUp } from 'phosphor-react-native';
 import { database } from '@/db';
 import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
@@ -111,13 +111,13 @@ export default function HomeScreen() {
           </Text>
         </Pressable>
         <Pressable
-          onPress={() => navigation.navigate('Accounts')}
+          onPress={() => navigation.navigate('StatementImport')}
           className="flex-1 items-center py-4"
           style={{ backgroundColor: '#FFFFFF', borderRadius: 14 }}
         >
-          <ArrowsLeftRight size={22} color={colors.blueAccent.DEFAULT} weight="bold" />
+          <FileArrowUp size={22} color={colors.blueAccent.DEFAULT} weight="bold" />
           <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 12, color: colors.textSecondary.DEFAULT, marginTop: 6 }}>
-            Transfer
+            Import
           </Text>
         </Pressable>
       </View>
