@@ -19,8 +19,9 @@ import {
 import { DMMono_400Regular, DMMono_500Medium } from '@expo-google-fonts/dm-mono';
 import { ActivityIndicator, View } from 'react-native';
 
-import BottomTabNavigator from '@/navigation/BottomTabNavigator';
+import RootNavigator from '@/navigation/RootNavigator';
 import { useDatabase } from '@/hooks/useDatabase';
+import Toast from 'react-native-toast-message';
 
 function AppContent() {
   const { database, isReady } = useDatabase();
@@ -37,9 +38,10 @@ function AppContent() {
     <DatabaseProvider database={database}>
       <SafeAreaProvider>
         <NavigationContainer>
-          <BottomTabNavigator />
+          <RootNavigator />
           <StatusBar style="auto" />
         </NavigationContainer>
+        <Toast />
       </SafeAreaProvider>
     </DatabaseProvider>
   );
