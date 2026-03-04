@@ -1,4 +1,5 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useOnboardingStore } from '@/stores';
 import BottomTabNavigator from './BottomTabNavigator';
 import AddTransactionScreen, { TransactionSheetProvider } from '@/screens/AddTransactionScreen';
 import AccountsScreen from '@/screens/AccountsScreen';
@@ -6,8 +7,10 @@ import AddAccountScreen from '@/screens/AddAccountScreen';
 import StatementImportScreen from '@/screens/StatementImportScreen';
 import ImportPreviewScreen from '@/screens/ImportPreviewScreen';
 import PDFImportScreen from '@/screens/PDFImportScreen';
+import OnboardingScreen from '@/screens/OnboardingScreen';
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   MainTabs: undefined;
   AddTransaction: { transactionId?: string } | undefined;
   Accounts: undefined;
@@ -20,9 +23,15 @@ export type RootStackParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function RootNavigator() {
+  const hasCompletedOnboarding = useOnboardingStore((s) => s.hasCompletedOnboarding);
+
   return (
     <TransactionSheetProvider>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        screenOptions={{ headerShown: false }}
+        initialRouteName={hasCompletedOnboarding ? 'MainTabs' : 'Onboarding'}
+      >
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
         <Stack.Screen
           name="AddTransaction"
