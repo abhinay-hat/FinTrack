@@ -8,7 +8,7 @@ import ImportScreen from '@/screens/ImportScreen';
 import BudgetScreen from '@/screens/BudgetScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
 
-type TabParamList = {
+export type TabParamList = {
   Home: undefined;
   Transactions: undefined;
   Import: undefined;
