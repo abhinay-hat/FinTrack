@@ -1,6 +1,7 @@
 import { View, Text, Pressable, TextInput, ScrollView, Switch, KeyboardAvoidingView, Platform } from 'react-native';
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'phosphor-react-native';
 import Toast from 'react-native-toast-message';
 import { database } from '@/db';
@@ -27,6 +28,7 @@ export default function AddAccountScreen() {
   const route = useRoute<RouteProp<RouteParams, 'AddAccount'>>();
   const accountId = route.params?.accountId;
   const isEditing = !!accountId;
+  const insets = useSafeAreaInsets();
 
   const [name, setName] = useState('');
   const [accountType, setAccountType] = useState<AccountType>('savings');
@@ -97,7 +99,7 @@ export default function AddAccountScreen() {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       {/* Header */}
-      <View className="flex-row items-center px-4 pt-2 pb-3 bg-white">
+      <View className="flex-row items-center px-4 pb-3 bg-white" style={{ paddingTop: insets.top + 8 }}>
         <Pressable onPress={() => navigation.goBack()} className="p-2 -ml-2" hitSlop={8}>
           <ArrowLeft size={24} color={colors.textPrimary.DEFAULT} />
         </Pressable>

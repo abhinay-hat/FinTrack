@@ -53,6 +53,7 @@ export default function BottomTabNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
             <House size={size} color={color} weight={focused ? 'fill' : 'regular'} />
           ),
@@ -89,6 +90,7 @@ export default function BottomTabNavigator() {
         name="Settings"
         component={SettingsScreen}
         options={{
+          headerShown: false,
           tabBarIcon: ({ focused, color, size }) => (
             <GearSix size={size} color={color} weight={focused ? 'fill' : 'regular'} />
           ),
