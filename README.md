@@ -1,171 +1,173 @@
 # FinTrack
 
-**AI-powered offline personal finance tracker built for India**
+**Offline personal finance tracker for India, with an experimental on-device LLM path**
 
-FinTrack is a mobile app that helps you track expenses, manage budgets, and gain insights into your spending — all without requiring an internet connection. Your financial data stays on your device.
+> **Status: paused, work in progress.** Active development stopped in March 2026. Many screens work, but several features are stubs or only half wired. The list below says exactly which. Bug reports and "this is broken" notes are welcome: see [Feedback](#feedback--report-a-bug).
 
-## Features
+FinTrack is a React Native + Expo app for tracking expenses, budgets and imported bank statements without an account or a server. Your data stays on the phone.
 
-### Core Finance
-- **Multi-Account Management** — Track checking, savings, credit cards, cash, and digital wallets
-- **Transaction Tracking** — Add income, expenses, and transfers with category tagging
-- **Budget System** — Set monthly budgets per category with real-time progress tracking
-- **Recurring Transactions** — Mark and track recurring payments
+The AI idea: categorize transactions with rules first, and only on phones with enough RAM, fall back to a small LLM running on the device. The app reads total RAM (`src/utils/deviceTier.ts`) and picks a tier:
 
-### Smart Import
-- **CSV/Excel Import** — Import bank statements with smart column auto-detection
-- **PDF Statement OCR** — Extract transactions from scanned PDF bank statements with confidence scoring
-- **15 Indian Bank Templates** — Pre-built mappings for SBI, HDFC, ICICI, Axis, Kotak, PNB, and more
-- **UPI Transaction Parsing** — Parse UPI payment descriptions and merchant names
+| Tier | Total RAM | Categorization |
+|------|-----------|----------------|
+| 1 | 4 GB or less | Rule-based only |
+| 2 | 4 to 6 GB | Rules + SmolLM2 360M (planned) |
+| 3 | More than 6 GB | Rules + SmolLM2 1.7B (planned) |
 
-### AI & Categorization
-- **Rule-Based Categorization** — 500+ Indian merchant mappings (Swiggy, Zomato, Flipkart, Amazon, etc.)
-- **AI Insights Engine** — Spending summaries, anomaly detection, and savings tips
-- **12 Built-in Categories** — Food & Dining, Transport, Shopping, Bills, Entertainment, Health, Education, Investments, Rent & EMI, Groceries, Income, Others
+A runtime monitor drops to a lower tier if average inference time goes over 5 seconds. **The LLM part does not produce results yet.** See below.
 
-### Analytics & Reports
-- **Dashboard** — Balance overview, spending mini-chart, and top categories at a glance
-- **Analytics Screen** — Income vs. expense trends, category donut chart, spending trends
-- **Data Export** — Export transactions to CSV or PDF reports
+## What works / what's stubbed
 
-### Security & Backup
-- **PIN Lock** — Protect app access with a PIN code
-- **Biometric Authentication** — Fingerprint/Face unlock support
-- **Encrypted Backup** — Create and restore encrypted backups of all your data
-- **Offline-First** — All data stored locally with WatermelonDB on SQLite
+**Works (manual testing only, no automated tests)**
 
-### User Experience
-- **Onboarding Flow** — Guided setup for first-time users
-- **Swipe-to-Delete** — Quick transaction management with gesture support
-- **Animated UI** — Smooth transitions with React Native Reanimated
-- **Multi-language** — English and Hindi support
-- **INR Currency** — Built for Indian Rupee with proper formatting
+- Accounts (bank, cash, wallet, credit card) and adding income / expense transactions
+- Monthly budgets per category with progress rings
+- Home dashboard and Analytics screen (income vs expense, category donut, spending trend)
+- CSV / Excel statement import with column auto-detection and 15 bank templates
+- Rule-based categorization: 500+ Indian merchant keywords, plus UPI VPA parsing
+- RAM-based device tier detection and per-tier animation settings
+- PIN lock (hashed) and biometric unlock via `expo-local-authentication`
+- Backup to a `.fintrack` file you can share anywhere, and restore from it
+- Onboarding flow
 
-## Tech Stack
+**Partial**
+
+- **On-device LLM.** `src/services/ai/llmService.ts` defines the interface and a stub that reports "not available"; categorization stays rule-based. A MediaPipe / `expo-llm-mediapipe` backend and model download path exist in unfinished local work, but **are not in this branch yet** (experimental, paused). Do not expect on-device inference from `origin/main`.
+- **PDF statement import.** Text is pulled from digital PDFs with a simple regex over the raw file. Compressed PDFs (most bank statements) will usually come back empty. Scanned PDFs need OCR, which is a stub (`src/services/ocr/ocrEngine.ts`).
+- **Hindi.** Translation files exist, but only the PIN, lock and settings screens use them. The rest of the UI is English.
+- **Backup password protection.** The backup file is password-protected with a SHA-256-derived key and XOR (`obfuscate` / `deobfuscate` in `encryptionUtils.ts`). That is obfuscation, not real encryption. Do not rely on it for confidentiality.
+- **Android SMS reading** (experimental, not in this branch yet): unfinished local work for parsing bank SMS locally. Not present under `src/services/sms/` on `origin/main`.
+
+**Stubbed or not wired to the UI yet**
+
+- AI insights: `insightsGenerator.ts` exists, but the Analytics screen shows a "coming soon" placeholder
+- Database encryption (SQLCipher): stub, always returns "not available"
+- OCR for scanned statements: stub
+- CSV / PDF export: service code exists, no button calls it
+- Weekly summary notifications: service code exists, never scheduled
+- Recurring transactions: field exists in the model, no UI to set it
+- Transfers between accounts: type exists, the toggle only offers income and expense
+- Swipe-to-delete: component exists, not used on any screen
+- Cloud backup: none. FinTrack has no server. You move the backup file yourself (Drive, email, USB).
+
+**Persistence:** WatermelonDB uses the SQLite adapter with JSI (`src/db/setup.ts`), backed by the `expo-sqlite` dependency. A development / native build is required for SQLite JSI; Expo Go may not load it.
+
+## Tech stack
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | React Native 0.83 + Expo SDK 55 |
+| Framework | React Native 0.83 + Expo SDK 55 (New Architecture) |
 | Language | TypeScript |
-| Database | WatermelonDB (SQLite) |
+| Database | WatermelonDB with the SQLite adapter (JSI) |
 | State | Zustand + AsyncStorage |
-| Navigation | React Navigation 7 (Bottom Tabs + Native Stack) |
+| Navigation | React Navigation 7 (bottom tabs + native stack) |
 | Styling | NativeWind (Tailwind CSS) |
 | Charts | react-native-svg (custom) |
 | Animations | React Native Reanimated 4 |
-| Gestures | React Native Gesture Handler |
+| On-device LLM | Interface + stub only on this branch (experimental MediaPipe work not merged) |
 | Icons | Phosphor Icons |
 | Fonts | Inter, Plus Jakarta Sans, DM Mono |
 | i18n | i18next + react-i18next |
-| Build | EAS Build (Expo Application Services) |
+| Build | EAS Build |
 
-## Getting Started
+## Getting started
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-- [Expo CLI](https://docs.expo.dev/get-started/installation/)
-- Expo Go app on your phone (for development)
+- Node.js 20.19.4 or newer (required by React Native 0.83)
+- npm
+- For a development build: Android Studio + JDK 17 (Android), or Xcode on macOS (iOS)
 
-### Installation
+You do not need a global Expo CLI; `npx expo` is enough.
+
+### Install
 
 ```bash
-# Clone the repository
 git clone https://github.com/abhinay-hat/FinTrack.git
 cd FinTrack
-
-# Install dependencies
-npm install --legacy-peer-deps
-
-# Start the development server
-npx expo start
+npm install   # .npmrc already sets legacy-peer-deps
 ```
 
-Scan the QR code with Expo Go (Android) or Camera app (iOS) to run on your device.
+### Run
 
-### Build APK
+**Development build (recommended).** SQLite JSI and any future native modules (LLM, SMS) are not available in Expo Go, so use a dev build:
 
 ```bash
-# Install EAS CLI
+npm run android   # expo run:android, builds and installs on a device or emulator
+npm run ios       # expo run:ios, macOS + Xcode only
+```
+
+**Expo Go (limited).** `npx expo start` and scanning the QR code may load some screens, but SQLite JSI and other native-only features will not work. Expo Go only runs projects on the SDK version it ships with, so you need an Expo Go build that supports SDK 55.
+
+### Other scripts
+
+```bash
+npm run lint        # ESLint
+npm run format      # Prettier on src/
+npx tsc --noEmit    # type check
+```
+
+### Build an APK with EAS
+
+```bash
 npm install -g eas-cli
-
-# Login to Expo
 eas login
-
-# Build APK (cloud)
 eas build --profile preview --platform android
 ```
 
-## Project Structure
+The `preview` profile in `eas.json` uses `credentialsSource: "local"`, which expects a `credentials.json` and keystore that are not in this repo. Remove that line to let EAS manage signing for your own account.
+
+## Project structure
 
 ```
 src/
 ├── components/          # Reusable UI components
-│   ├── BalanceCard.tsx
-│   ├── CategoryDonutChart.tsx
-│   ├── IncomeExpenseChart.tsx
-│   ├── SpendingMiniChart.tsx
-│   ├── BudgetProgressRing.tsx
-│   ├── SwipeToDelete.tsx
-│   └── ...
-├── db/                  # Database schema, migrations, setup
+├── db/                  # WatermelonDB schema, migrations, setup
 ├── hooks/               # Custom React hooks
-├── i18n/                # Internationalization (en, hi)
+├── i18n/                # en, hi
 ├── models/              # WatermelonDB models
-│   ├── Account.ts
-│   ├── Transaction.ts
-│   ├── Category.ts
-│   ├── Budget.ts
-│   ├── Statement.ts
-│   └── AIInsight.ts
 ├── navigation/          # React Navigation setup
 ├── screens/             # App screens
-│   ├── HomeScreen.tsx
-│   ├── TransactionsScreen.tsx
-│   ├── AddTransactionScreen.tsx
-│   ├── AnalyticsScreen.tsx
-│   ├── BudgetScreen.tsx
-│   ├── AccountsScreen.tsx
-│   ├── SettingsScreen.tsx
-│   ├── BackupSettingsScreen.tsx
-│   ├── ImportScreen.tsx
-│   ├── OnboardingScreen.tsx
-│   ├── LockScreen.tsx
-│   └── ...
 ├── services/
-│   ├── ai/              # AI categorization & insights
-│   ├── backup/          # Encrypted backup & restore
-│   ├── categorization/  # Rule-based merchant categorization
-│   ├── export/          # CSV & PDF export
-│   ├── import/          # Bank statement import pipeline
-│   ├── ocr/             # PDF text extraction & parsing
-│   └── upi/             # UPI transaction parser
-├── stores/              # Zustand state stores
-├── theme/               # Colors, typography, design tokens
-└── utils/               # Currency formatting, date helpers
+│   ├── ai/              # Rule categorization, LLM stub, insights (not shown in UI)
+│   ├── backup/          # .fintrack backup/restore (password obfuscation, not encryption)
+│   ├── categorization/  # Rule-based merchant map
+│   ├── encryption/      # SQLCipher stub
+│   ├── export/          # CSV and PDF export (not wired to UI)
+│   ├── import/          # CSV / Excel import pipeline and bank templates
+│   ├── normalizer/      # Transaction normalization
+│   ├── ocr/             # PDF text extraction, OCR stub
+│   └── upi/             # UPI description parser
+├── stores/              # Zustand stores
+├── theme/               # Colors, typography
+└── utils/               # Currency, dates, device tier
 ```
 
-## Database Schema
+`sms/` and `dedup/` exist in unfinished local work only; they are not in this branch yet.
+
+## Database schema
 
 | Table | Purpose |
 |-------|---------|
 | `accounts` | Bank accounts, wallets, cash |
-| `transactions` | All income/expense/transfer records |
+| `transactions` | Income / expense records |
 | `categories` | Spending categories with keywords |
 | `budgets` | Monthly budget limits per category |
 | `statements` | Imported bank statement metadata |
-| `ai_insights` | Generated spending insights |
+| `ai_insights` | Generated insights (not shown in UI yet) |
 
-## Supported Banks
+## Bank import templates
 
-Pre-built import templates for:
-SBI, HDFC, ICICI, Axis, Kotak Mahindra, PNB, Bank of Baroda, Canara Bank, Union Bank, IndusInd, Yes Bank, IDFC First, Federal Bank, Bank of India, Indian Bank
+SBI, HDFC, ICICI, Axis, Kotak Mahindra, PNB, Bank of Baroda, Canara Bank, Union Bank, IndusInd, Federal Bank, Yes Bank, IDFC First, RBL Bank, AU Small Finance Bank.
+
+These are column mappings for CSV / Excel exports. They have not been tested against current statement formats from every bank, so reports of a bank that fails to import are useful.
+
+## Feedback / report a bug
+
+Found a bug, a crash, a wrong category, or a missing feature? Please [open an issue](https://github.com/abhinay-hat/FinTrack/issues/new/choose). There are short templates for bugs and feature requests. Include your phone model, RAM and Android / iOS version if it is a bug.
+
+Since the project is paused, fixes may be slow, but every issue gets read.
 
 ## License
 
-This project is private and not licensed for public distribution.
-
----
-
-Built with React Native + Expo
+No license has been chosen yet, so all rights are reserved by default. If you want to reuse part of the code, open an issue and ask.
