@@ -1,27 +1,21 @@
 /**
- * Backup service for creating and restoring password-obfuscated .fintrack files.
+ * Backup service for creating and restoring password-encrypted .fintrack files.
  *
  * Backup flow:
  *   1. Query all WatermelonDB tables
  *   2. Serialize to JSON
  *   3. Calculate SHA-256 checksum
- *   4. Obfuscate with user-supplied password (XOR; see encryptionUtils)
+ *   4. Encrypt with user password (AES-256-GCM / FTB2.; see encryptionUtils)
  *   5. Write to documentDirectory as .fintrack file
  *
  * Restore flow:
  *   1. Read .fintrack file
- *   2. Deobfuscate with password
+ *   2. Decrypt (FTB2 AEAD, or legacy pre-2.0 XOR obfuscated files)
  *   3. Verify checksum
  *   4. Optionally clear existing data
  *   5. Batch-insert all records into WatermelonDB
- *
- * Obfuscation is not encryption. See encryptionUtils.ts.
  */
-import {
-  documentDirectory,
-  writeAsStringAsync,
-  readAsStringAsync,
-} from 'expo-file-system/legacy';
+import { documentDirectory, writeAsStringAsync, readAsStringAsync } from 'expo-file-system/legacy';
 import { database } from '@/db/setup';
 import Account from '@/models/Account';
 import Transaction from '@/models/Transaction';
@@ -29,10 +23,10 @@ import Category from '@/models/Category';
 import Budget from '@/models/Budget';
 import Statement from '@/models/Statement';
 import AIInsight from '@/models/AIInsight';
-import { obfuscate, deobfuscate, computeChecksum } from './encryptionUtils';
+import { encryptBackup, decryptBackup, computeChecksum } from './encryptionUtils';
 
 const APP_VERSION = '1.0.0';
-const BACKUP_FORMAT_VERSION = '1.0.0';
+const BACKUP_FORMAT_VERSION = '2.0.0';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -58,7 +52,7 @@ export interface BackupData {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers — serialise a WatermelonDB model to a plain object
+// Helpers - serialise a WatermelonDB model to a plain object
 // ---------------------------------------------------------------------------
 
 function serializeAccount(m: Account): Record<string, unknown> {
@@ -145,29 +139,17 @@ function serializeAIInsight(m: AIInsight): Record<string, unknown> {
 // ---------------------------------------------------------------------------
 
 /**
- * Create a password-obfuscated backup of all data and write it as a .fintrack file.
- * Returns the file URI. Obfuscation is not encryption.
+ * Create a password-encrypted backup of all data and write it as a .fintrack file.
+ * Returns the file URI. Uses AES-256-GCM (FTB2.).
  */
 export async function createBackup(password: string): Promise<string> {
   // 1. Query all records
   const accounts = await database.get<Account>('accounts').query().fetch();
-  const transactions = await database
-    .get<Transaction>('transactions')
-    .query()
-    .fetch();
-  const categories = await database
-    .get<Category>('categories')
-    .query()
-    .fetch();
+  const transactions = await database.get<Transaction>('transactions').query().fetch();
+  const categories = await database.get<Category>('categories').query().fetch();
   const budgets = await database.get<Budget>('budgets').query().fetch();
-  const statements = await database
-    .get<Statement>('statements')
-    .query()
-    .fetch();
-  const aiInsights = await database
-    .get<AIInsight>('ai_insights')
-    .query()
-    .fetch();
+  const statements = await database.get<Statement>('statements').query().fetch();
+  const aiInsights = await database.get<AIInsight>('ai_insights').query().fetch();
 
   // 2. Serialize
   const metadata: BackupMetadata = {
@@ -176,7 +158,7 @@ export async function createBackup(password: string): Promise<string> {
     appVersion: APP_VERSION,
     transactionCount: transactions.length,
     accountCount: accounts.length,
-    checksum: '', // placeholder — filled after hashing
+    checksum: '', // placeholder - filled after hashing
   };
 
   const data: BackupData = {
@@ -192,14 +174,14 @@ export async function createBackup(password: string): Promise<string> {
   // 3. Checksum (payload arrays only; metadata counts bound separately on verify)
   metadata.checksum = await computePayloadChecksum(data);
 
-  // 4. Obfuscate (not encryption)
+  // 4. Encrypt (AES-256-GCM, FTB2. envelope)
   const fullJson = JSON.stringify(data);
-  const obfuscated = await obfuscate(fullJson, password);
+  const encrypted = await encryptBackup(fullJson, password);
 
   // 5. Write to file
   const fileName = `fintrack-backup-${Date.now()}.fintrack`;
   const fileUri = `${documentDirectory}${fileName}`;
-  await writeAsStringAsync(fileUri, obfuscated);
+  await writeAsStringAsync(fileUri, encrypted);
 
   return fileUri;
 }
@@ -238,14 +220,10 @@ function assertBackupShape(data: BackupData): void {
     }
   }
   if (metadata.transactionCount !== data.transactions.length) {
-    throw new Error(
-      'Backup metadata transactionCount does not match the transaction list.',
-    );
+    throw new Error('Backup metadata transactionCount does not match the transaction list.');
   }
   if (metadata.accountCount !== data.accounts.length) {
-    throw new Error(
-      'Backup metadata accountCount does not match the account list.',
-    );
+    throw new Error('Backup metadata accountCount does not match the account list.');
   }
 }
 
@@ -259,12 +237,9 @@ async function verifyBackupIntegrity(data: BackupData): Promise<void> {
   }
 }
 
-async function loadBackupData(
-  fileUri: string,
-  password: string,
-): Promise<BackupData> {
-  const obfuscated = await readAsStringAsync(fileUri);
-  const plaintext = await deobfuscate(obfuscated, password);
+async function loadBackupData(fileUri: string, password: string): Promise<BackupData> {
+  const payload = await readAsStringAsync(fileUri);
+  const plaintext = await decryptBackup(payload, password);
   const data = JSON.parse(plaintext) as BackupData;
   await verifyBackupIntegrity(data);
   return data;
@@ -293,7 +268,7 @@ export async function restoreBackup(
   password: string,
   clearExisting = false,
 ): Promise<{ transactionCount: number; accountCount: number }> {
-  // 1. Read, deobfuscate, verify checksum + metadata counts (before any wipe)
+  // 1. Read, decrypt, verify checksum + metadata counts (before any wipe)
   const data = await loadBackupData(fileUri, password);
 
   // 2. Write to DB inside a single batch
@@ -356,12 +331,10 @@ export async function restoreBackup(
         (rec._raw as Record<string, unknown>).date = raw.date as number;
         rec.description = raw.description as string;
         rec.rawDescription = (raw.rawDescription as string) ?? null;
-        rec.transactionType =
-          raw.transactionType as Transaction['transactionType'];
+        rec.transactionType = raw.transactionType as Transaction['transactionType'];
         rec.isRecurring = raw.isRecurring as boolean;
         rec.notes = (raw.notes as string) ?? null;
-        rec.importSource =
-          (raw.importSource as Transaction['importSource']) ?? null;
+        rec.importSource = (raw.importSource as Transaction['importSource']) ?? null;
         rec.accountId = raw.accountId as string;
         rec.categoryId = raw.categoryId as string;
         rec.statementId = (raw.statementId as string) ?? null;
