@@ -35,7 +35,7 @@ export const useSecurityStore = create<SecurityState>()(
       lastActiveTime: null,
       isLocked: false,
 
-      enableAppLock: () => set({ isAppLockEnabled: true }),
+      enableAppLock: () => set({ isAppLockEnabled: true, isLocked: true }),
 
       disableAppLock: () =>
         set({

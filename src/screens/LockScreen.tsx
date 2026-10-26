@@ -8,6 +8,8 @@ import { useSecurityStore } from '@/stores/useSecurityStore';
 import { authenticateWithBiometric, isBiometricAvailable } from '@/services/authService';
 
 const PIN_LENGTH = 4;
+const MAX_PIN_ATTEMPTS = 5;
+const LOCKOUT_MS = 30_000;
 const KEYPAD = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'del'];
 
 export default function LockScreen() {
@@ -16,6 +18,9 @@ export default function LockScreen() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
   const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState(0);
+  const [now, setNow] = useState(Date.now());
   const shakeAnim = useRef(new Animated.Value(0)).current;
 
   const isBiometricEnabled = useSecurityStore((s) => s.isBiometricEnabled);
@@ -23,22 +28,35 @@ export default function LockScreen() {
   const verifyPIN = useSecurityStore((s) => s.verifyPIN);
   const unlock = useSecurityStore((s) => s.unlock);
 
+  const lockedOut = now < lockoutUntil;
+  const lockoutSecondsLeft = lockedOut
+    ? Math.ceil((lockoutUntil - now) / 1000)
+    : 0;
+
   useEffect(() => {
     isBiometricAvailable().then(setBiometricAvailable);
   }, []);
 
   useEffect(() => {
-    if (isBiometricEnabled && biometricAvailable) {
+    if (!lockedOut) return;
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, [lockedOut]);
+
+  useEffect(() => {
+    if (isBiometricEnabled && biometricAvailable && !lockedOut) {
       handleBiometric();
     }
-  }, [isBiometricEnabled, biometricAvailable]);
+  }, [isBiometricEnabled, biometricAvailable, lockedOut]);
 
   const handleBiometric = useCallback(async () => {
+    if (Date.now() < lockoutUntil) return;
     const success = await authenticateWithBiometric();
     if (success) {
+      setFailedAttempts(0);
       unlock();
     }
-  }, [unlock]);
+  }, [unlock, lockoutUntil]);
 
   const triggerShake = useCallback(() => {
     Animated.sequence([
@@ -50,24 +68,37 @@ export default function LockScreen() {
   }, [shakeAnim]);
 
   useEffect(() => {
-    if (pin.length === PIN_LENGTH && isPINEnabled) {
-      verifyPIN(pin).then((valid) => {
-        if (valid) {
-          unlock();
-        } else {
-          setError(true);
-          triggerShake();
-          setTimeout(() => {
-            setPin('');
-            setError(false);
-          }, 600);
-        }
-      });
+    if (pin.length !== PIN_LENGTH || !isPINEnabled) return;
+    if (Date.now() < lockoutUntil) {
+      setPin('');
+      return;
     }
-  }, [pin, isPINEnabled, verifyPIN, unlock, triggerShake]);
+    verifyPIN(pin).then((valid) => {
+      if (valid) {
+        setFailedAttempts(0);
+        unlock();
+      } else {
+        setError(true);
+        triggerShake();
+        setFailedAttempts((prev) => {
+          const next = prev + 1;
+          if (next >= MAX_PIN_ATTEMPTS) {
+            setLockoutUntil(Date.now() + LOCKOUT_MS);
+            return 0;
+          }
+          return next;
+        });
+        setTimeout(() => {
+          setPin('');
+          setError(false);
+        }, 600);
+      }
+    });
+  }, [pin, isPINEnabled, verifyPIN, unlock, triggerShake, lockoutUntil]);
 
   const onKeyPress = useCallback(
     (key: string) => {
+      if (Date.now() < lockoutUntil) return;
       if (key === 'del') {
         setPin((p) => p.slice(0, -1));
         setError(false);
@@ -75,7 +106,7 @@ export default function LockScreen() {
         setPin((p) => p + key);
       }
     },
-    [pin.length],
+    [pin.length, lockoutUntil],
   );
 
   return (
@@ -140,12 +171,16 @@ export default function LockScreen() {
         style={{
           fontFamily: 'Inter_500Medium',
           fontSize: 14,
-          color: error ? colors.danger.dark : 'rgba(255,255,255,0.7)',
+          color: lockedOut || error ? colors.danger.dark : 'rgba(255,255,255,0.7)',
           textAlign: 'center',
           marginBottom: 32,
         }}
       >
-        {error ? t('security.pin_mismatch') : t('security.enter_pin')}
+        {lockedOut
+          ? `Too many attempts. Try again in ${lockoutSecondsLeft}s`
+          : error
+            ? t('security.pin_mismatch')
+            : t('security.enter_pin')}
       </Text>
 
       {/* Keypad */}
@@ -165,8 +200,9 @@ export default function LockScreen() {
                     alignItems: 'center',
                     justifyContent: 'center',
                     marginHorizontal: 12,
+                    opacity: lockedOut && key !== '' ? 0.4 : 1,
                   })}
-                  disabled={key === ''}
+                  disabled={key === '' || lockedOut}
                 >
                   <Text
                     style={{

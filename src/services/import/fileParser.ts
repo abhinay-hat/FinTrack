@@ -7,10 +7,24 @@ import * as FileSystem from 'expo-file-system';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 
+/** Soft cap to reduce memory / parser DoS from oversized statement files. */
+const MAX_IMPORT_BYTES = 5 * 1024 * 1024;
+
 export interface ParsedFile {
   headers: string[];
   rows: string[][];
   fileName: string;
+}
+
+async function assertImportSize(fileUri: string): Promise<void> {
+  const info = await FileSystem.getInfoAsync(fileUri);
+  if (info.exists && 'size' in info && typeof info.size === 'number') {
+    if (info.size > MAX_IMPORT_BYTES) {
+      throw new Error(
+        `File is too large (max ${MAX_IMPORT_BYTES / (1024 * 1024)} MB)`,
+      );
+    }
+  }
 }
 
 /**
@@ -51,6 +65,7 @@ function findHeaderRow(allRows: string[][]): { headerIndex: number; headers: str
 }
 
 export async function parseCSV(fileUri: string, fileName: string): Promise<ParsedFile> {
+  await assertImportSize(fileUri);
   const content = await FileSystem.readAsStringAsync(fileUri);
 
   // Auto-detect delimiter
@@ -80,6 +95,7 @@ export async function parseCSV(fileUri: string, fileName: string): Promise<Parse
 }
 
 export async function parseExcel(fileUri: string, fileName: string): Promise<ParsedFile> {
+  await assertImportSize(fileUri);
   const base64 = await FileSystem.readAsStringAsync(fileUri, {
     encoding: 'base64',
   });
