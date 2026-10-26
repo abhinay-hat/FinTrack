@@ -189,17 +189,8 @@ export async function createBackup(password: string): Promise<string> {
     aiInsights: aiInsights.map(serializeAIInsight),
   };
 
-  // 3. Checksum (computed on payload without the checksum field itself)
-  const payloadJson = JSON.stringify({
-    accounts: data.accounts,
-    transactions: data.transactions,
-    categories: data.categories,
-    budgets: data.budgets,
-    statements: data.statements,
-    aiInsights: data.aiInsights,
-  });
-  const checksum = await computeChecksum(payloadJson);
-  metadata.checksum = checksum;
+  // 3. Checksum (payload arrays only; metadata counts bound separately on verify)
+  metadata.checksum = await computePayloadChecksum(data);
 
   // 4. Obfuscate (not encryption)
   const fullJson = JSON.stringify(data);
@@ -214,15 +205,80 @@ export async function createBackup(password: string): Promise<string> {
 }
 
 /**
+ * Integrity for restore preview and restore: checksum over payload arrays, plus
+ * metadata counts must match those arrays so the confirm UI cannot lie.
+ */
+async function computePayloadChecksum(data: BackupData): Promise<string> {
+  const payloadJson = JSON.stringify({
+    accounts: data.accounts,
+    transactions: data.transactions,
+    categories: data.categories,
+    budgets: data.budgets,
+    statements: data.statements,
+    aiInsights: data.aiInsights,
+  });
+  return computeChecksum(payloadJson);
+}
+
+function assertBackupShape(data: BackupData): void {
+  const { metadata } = data;
+  if (!metadata || typeof metadata !== 'object') {
+    throw new Error('Backup metadata is missing or invalid.');
+  }
+  for (const key of [
+    'accounts',
+    'transactions',
+    'categories',
+    'budgets',
+    'statements',
+    'aiInsights',
+  ] as const) {
+    if (!Array.isArray(data[key])) {
+      throw new Error(`Backup field "${key}" is missing or invalid.`);
+    }
+  }
+  if (metadata.transactionCount !== data.transactions.length) {
+    throw new Error(
+      'Backup metadata transactionCount does not match the transaction list.',
+    );
+  }
+  if (metadata.accountCount !== data.accounts.length) {
+    throw new Error(
+      'Backup metadata accountCount does not match the account list.',
+    );
+  }
+}
+
+async function verifyBackupIntegrity(data: BackupData): Promise<void> {
+  assertBackupShape(data);
+  const checksum = await computePayloadChecksum(data);
+  if (checksum !== data.metadata.checksum) {
+    throw new Error(
+      'Backup checksum verification failed. The file may be corrupted or the password is incorrect.',
+    );
+  }
+}
+
+async function loadBackupData(
+  fileUri: string,
+  password: string,
+): Promise<BackupData> {
+  const obfuscated = await readAsStringAsync(fileUri);
+  const plaintext = await deobfuscate(obfuscated, password);
+  const data = JSON.parse(plaintext) as BackupData;
+  await verifyBackupIntegrity(data);
+  return data;
+}
+
+/**
  * Read and return only the metadata from a .fintrack backup file.
+ * Verifies checksum and metadata/array count binding before returning.
  */
 export async function readBackupMetadata(
   fileUri: string,
   password: string,
 ): Promise<BackupMetadata> {
-  const obfuscated = await readAsStringAsync(fileUri);
-  const plaintext = await deobfuscate(obfuscated, password);
-  const data: BackupData = JSON.parse(plaintext);
+  const data = await loadBackupData(fileUri, password);
   return data.metadata;
 }
 
@@ -237,28 +293,10 @@ export async function restoreBackup(
   password: string,
   clearExisting = false,
 ): Promise<{ transactionCount: number; accountCount: number }> {
-  // 1. Read & deobfuscate
-  const obfuscated = await readAsStringAsync(fileUri);
-  const plaintext = await deobfuscate(obfuscated, password);
-  const data: BackupData = JSON.parse(plaintext);
+  // 1. Read, deobfuscate, verify checksum + metadata counts (before any wipe)
+  const data = await loadBackupData(fileUri, password);
 
-  // 2. Verify checksum
-  const payloadJson = JSON.stringify({
-    accounts: data.accounts,
-    transactions: data.transactions,
-    categories: data.categories,
-    budgets: data.budgets,
-    statements: data.statements,
-    aiInsights: data.aiInsights,
-  });
-  const checksum = await computeChecksum(payloadJson);
-  if (checksum !== data.metadata.checksum) {
-    throw new Error(
-      'Backup checksum verification failed. The file may be corrupted or the password is incorrect.',
-    );
-  }
-
-  // 3. Write to DB inside a single batch
+  // 2. Write to DB inside a single batch
   await database.write(async () => {
     // Optionally clear existing data
     if (clearExisting) {
