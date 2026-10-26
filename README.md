@@ -23,11 +23,11 @@ A runtime monitor drops to a lower tier if average inference time goes over 5 se
 - Accounts (bank, cash, wallet, credit card) and adding income / expense transactions
 - Monthly budgets per category with progress rings
 - Home dashboard and Analytics screen (income vs expense, category donut, spending trend)
-- CSV / Excel statement import with column auto-detection and 15 bank templates
+- CSV / Excel statement import with column auto-detection and 15 bank templates. Excel parsing uses SheetJS `xlsx` 0.20.3 (patched for the 0.18.x CVEs), vendored as the official tarball from cdn.sheetjs.com in `vendor/` because SheetJS no longer publishes to npm; files over 5 MB are rejected
 - Rule-based categorization: 500+ Indian merchant keywords, plus UPI VPA parsing
 - RAM-based device tier detection and per-tier animation settings
-- PIN lock (hashed) and biometric unlock via `expo-local-authentication`
-- Backup to a `.fintrack` file you can share anywhere, and restore from it
+- PIN lock and biometric unlock via `expo-local-authentication`. The PIN is stored as a salted PBKDF2-SHA256 hash (100k iterations) in `expo-secure-store` (Keychain / Keystore). PINs saved by older builds as unsalted SHA-256 in AsyncStorage are migrated on the next successful unlock
+- Backup to a password-encrypted `.fintrack` file you can share anywhere, and restore from it. Encryption is AES-256-GCM (`@noble/ciphers`) with a key derived by PBKDF2-SHA256 (210k iterations, random salt; `@noble/hashes`). Backups made by older builds (XOR obfuscation, no `FTB2.` prefix) can still be restored; make a new backup afterwards to get the encrypted format
 - Onboarding flow
 
 **Partial**
@@ -35,13 +35,12 @@ A runtime monitor drops to a lower tier if average inference time goes over 5 se
 - **On-device LLM.** `src/services/ai/llmService.ts` defines the interface and a stub that reports "not available"; categorization stays rule-based. A MediaPipe / `expo-llm-mediapipe` backend and model download path exist in unfinished local work, but **are not in this branch yet** (experimental, paused). Do not expect on-device inference from `origin/main`.
 - **PDF statement import.** Text is pulled from digital PDFs with a simple regex over the raw file. Compressed PDFs (most bank statements) will usually come back empty. Scanned PDFs need OCR, which is a stub (`src/services/ocr/ocrEngine.ts`).
 - **Hindi.** Translation files exist, but only the PIN, lock and settings screens use them. The rest of the UI is English.
-- **Backup password protection.** The backup file is password-protected with a SHA-256-derived key and XOR (`obfuscate` / `deobfuscate` in `encryptionUtils.ts`). That is obfuscation, not real encryption. Do not rely on it for confidentiality.
 - **Android SMS reading** (experimental, not in this branch yet): unfinished local work for parsing bank SMS locally. Not present under `src/services/sms/` on `origin/main`.
 
 **Stubbed or not wired to the UI yet**
 
 - AI insights: `insightsGenerator.ts` exists, but the Analytics screen shows a "coming soon" placeholder
-- Database encryption (SQLCipher): stub, always returns "not available"
+- Database encryption (SQLCipher): stub, always returns "not available". The on-device SQLite database is not encrypted at rest; only backup files are. WatermelonDB's SQLite adapter does not ship SQLCipher, so this needs a custom native build
 - OCR for scanned statements: stub
 - CSV / PDF export: service code exists, no button calls it
 - Weekly summary notifications: service code exists, never scheduled
@@ -130,7 +129,7 @@ src/
 ├── screens/             # App screens
 ├── services/
 │   ├── ai/              # Rule categorization, LLM stub, insights (not shown in UI)
-│   ├── backup/          # .fintrack backup/restore (password obfuscation, not encryption)
+│   ├── backup/          # .fintrack backup/restore (AES-256-GCM, legacy XOR restore)
 │   ├── categorization/  # Rule-based merchant map
 │   ├── encryption/      # SQLCipher stub
 │   ├── export/          # CSV and PDF export (not wired to UI)
@@ -170,4 +169,4 @@ Since the project is paused, fixes may be slow, but every issue gets read.
 
 ## License
 
-No license has been chosen yet, so all rights are reserved by default. If you want to reuse part of the code, open an issue and ask.
+FinTrack is released under the [MIT License](LICENSE).
