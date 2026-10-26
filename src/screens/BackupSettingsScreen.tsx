@@ -211,7 +211,7 @@ export default function BackupSettingsScreen() {
             </View>
             <View style={{ flex: 1, marginLeft: 14 }}>
               <Text style={cardTitleStyle}>Create Backup</Text>
-              <Text style={cardSubtitleStyle}>Encrypt and export your data as a .fintrack file</Text>
+              <Text style={cardSubtitleStyle}>Export your data as a password-obfuscated .fintrack file (not real encryption)</Text>
             </View>
           </View>
         </Pressable>
@@ -282,7 +282,7 @@ export default function BackupSettingsScreen() {
           <Pressable style={modalStyle} onPress={() => {}}>
             <Text style={modalTitleStyle}>Set Backup Password</Text>
             <Text style={modalSubtitleStyle}>
-              This password encrypts your backup. You'll need it to restore.
+              This password obfuscates your backup (XOR, not encryption). You'll need it to restore.
             </Text>
             <View style={inputWrapperStyle}>
               <TextInput
@@ -341,7 +341,7 @@ export default function BackupSettingsScreen() {
           <Pressable style={modalStyle} onPress={() => {}}>
             <Text style={modalTitleStyle}>Backup Created</Text>
             <Text style={modalSubtitleStyle}>
-              Your encrypted backup is ready. Share it to save it somewhere safe.
+              Your backup file is ready. Share it to save it somewhere safe. Note: password protection is obfuscation only, not encryption.
             </Text>
             <Pressable
               onPress={handleShare}

@@ -1,19 +1,21 @@
 /**
- * Backup service for creating and restoring encrypted .fintrack backup files.
+ * Backup service for creating and restoring password-obfuscated .fintrack files.
  *
  * Backup flow:
  *   1. Query all WatermelonDB tables
  *   2. Serialize to JSON
  *   3. Calculate SHA-256 checksum
- *   4. Encrypt with user-supplied password (XOR cipher — see encryptionUtils)
+ *   4. Obfuscate with user-supplied password (XOR; see encryptionUtils)
  *   5. Write to documentDirectory as .fintrack file
  *
  * Restore flow:
  *   1. Read .fintrack file
- *   2. Decrypt with password
+ *   2. Deobfuscate with password
  *   3. Verify checksum
  *   4. Optionally clear existing data
  *   5. Batch-insert all records into WatermelonDB
+ *
+ * Obfuscation is not encryption. See encryptionUtils.ts.
  */
 import {
   documentDirectory,
@@ -27,7 +29,7 @@ import Category from '@/models/Category';
 import Budget from '@/models/Budget';
 import Statement from '@/models/Statement';
 import AIInsight from '@/models/AIInsight';
-import { encrypt, decrypt, computeChecksum } from './encryptionUtils';
+import { obfuscate, deobfuscate, computeChecksum } from './encryptionUtils';
 
 const APP_VERSION = '1.0.0';
 const BACKUP_FORMAT_VERSION = '1.0.0';
@@ -143,8 +145,8 @@ function serializeAIInsight(m: AIInsight): Record<string, unknown> {
 // ---------------------------------------------------------------------------
 
 /**
- * Create an encrypted backup of all data and write it as a .fintrack file.
- * Returns the file URI.
+ * Create a password-obfuscated backup of all data and write it as a .fintrack file.
+ * Returns the file URI. Obfuscation is not encryption.
  */
 export async function createBackup(password: string): Promise<string> {
   // 1. Query all records
@@ -199,14 +201,14 @@ export async function createBackup(password: string): Promise<string> {
   const checksum = await computeChecksum(payloadJson);
   metadata.checksum = checksum;
 
-  // 4. Encrypt
+  // 4. Obfuscate (not encryption)
   const fullJson = JSON.stringify(data);
-  const encrypted = await encrypt(fullJson, password);
+  const obfuscated = await obfuscate(fullJson, password);
 
   // 5. Write to file
   const fileName = `fintrack-backup-${Date.now()}.fintrack`;
   const fileUri = `${documentDirectory}${fileName}`;
-  await writeAsStringAsync(fileUri, encrypted);
+  await writeAsStringAsync(fileUri, obfuscated);
 
   return fileUri;
 }
@@ -218,9 +220,9 @@ export async function readBackupMetadata(
   fileUri: string,
   password: string,
 ): Promise<BackupMetadata> {
-  const encrypted = await readAsStringAsync(fileUri);
-  const decrypted = await decrypt(encrypted, password);
-  const data: BackupData = JSON.parse(decrypted);
+  const obfuscated = await readAsStringAsync(fileUri);
+  const plaintext = await deobfuscate(obfuscated, password);
+  const data: BackupData = JSON.parse(plaintext);
   return data.metadata;
 }
 
@@ -235,10 +237,10 @@ export async function restoreBackup(
   password: string,
   clearExisting = false,
 ): Promise<{ transactionCount: number; accountCount: number }> {
-  // 1. Read & decrypt
-  const encrypted = await readAsStringAsync(fileUri);
-  const decrypted = await decrypt(encrypted, password);
-  const data: BackupData = JSON.parse(decrypted);
+  // 1. Read & deobfuscate
+  const obfuscated = await readAsStringAsync(fileUri);
+  const plaintext = await deobfuscate(obfuscated, password);
+  const data: BackupData = JSON.parse(plaintext);
 
   // 2. Verify checksum
   const payloadJson = JSON.stringify({

@@ -1,9 +1,14 @@
 /**
- * Encryption utilities for .fintrack backup files.
+ * Password-based obfuscation for .fintrack backup files.
  *
  * Uses expo-crypto SHA-256 for key derivation and a repeating-key XOR cipher
- * over Base64-encoded data. This is **not** production-grade cryptography —
- * real encryption will come via SQLCipher (FIN-20).
+ * over Base64-encoded data. This is obfuscation, not encryption (no AEAD,
+ * no authenticated ciphertext). Do not treat it as confidentiality protection.
+ * Real encryption is planned via SQLCipher (FIN-20).
+ *
+ * No suitable AEAD library is already in package.json (expo-crypto provides
+ * digests and random only), so this module is intentionally named and
+ * documented as obfuscation rather than claiming encryption.
  */
 import * as Crypto from 'expo-crypto';
 
@@ -39,11 +44,11 @@ function xorWithKey(data: string, key: string): string {
 }
 
 /**
- * Encrypt a plaintext JSON string with the given password.
+ * Obfuscate a plaintext JSON string with the given password.
  *
  * Flow: plaintext -> Base64 -> XOR with derived key -> Base64
  */
-export async function encrypt(
+export async function obfuscate(
   plaintext: string,
   password: string,
 ): Promise<string> {
@@ -64,11 +69,11 @@ export async function encrypt(
 }
 
 /**
- * Decrypt a previously encrypted string with the given password.
+ * Reverse password-based obfuscation.
  *
  * Flow: Base64 decode -> XOR with derived key -> Base64 decode -> plaintext
  */
-export async function decrypt(
+export async function deobfuscate(
   ciphertext: string,
   password: string,
 ): Promise<string> {

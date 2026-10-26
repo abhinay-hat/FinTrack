@@ -292,7 +292,7 @@ export default function SettingsScreen() {
             onPress={() =>
               Alert.alert(
                 'FinTrack',
-                'Version 1.0.0\n\nAI-powered personal finance tracker.\n100% offline — your data never leaves your phone.\n\nBuilt for India with UPI support, multi-account tracking, budgets, analytics, and encrypted backups.',
+                'Version 1.0.0\n\nOffline personal finance tracker (rule-based categorization; on-device LLM experimental and not finished).\n100% offline - your data never leaves your phone.\n\nBuilt for India with UPI support, multi-account tracking, budgets, analytics, and password-obfuscated backups (not real encryption).',
               )
             }
           />

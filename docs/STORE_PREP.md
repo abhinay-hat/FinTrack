@@ -26,7 +26,7 @@
 ## App Store Descriptions
 
 ### Short Description (80 chars)
-Track expenses offline with AI. Import bank statements. Budget smartly.
+Track expenses offline. Import bank statements. Budget smartly.
 
 ### Full Description
 FinTrack is a 100% offline, privacy-first personal finance tracker built for India.
@@ -35,8 +35,8 @@ FinTrack is a 100% offline, privacy-first personal finance tracker built for Ind
 
 Take full control of your finances without ever sending a single byte of data to the cloud. FinTrack runs entirely on your device -- no accounts, no servers, no tracking.
 
-**Smart Categorization (On-Device AI)**
-FinTrack uses on-device AI to automatically categorize your transactions. From UPI payments to credit card bills, every entry is tagged intelligently -- without any data leaving your phone.
+**Smart Categorization (rule-based today)**
+FinTrack categorizes transactions with on-device keyword rules (UPI VPA parsing included). An experimental on-device LLM path is unfinished and not claimed as working. No transaction data leaves your phone.
 
 **Import Bank Statements Instantly**
 Drag and drop CSV, Excel, or PDF statements from 15+ Indian banks including SBI, HDFC, ICICI, Axis, Kotak, and more. FinTrack detects columns, parses amounts, and imports everything in seconds.
